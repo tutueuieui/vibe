@@ -79,13 +79,13 @@ export default function ContactPage() {
             <form onSubmit={handleSubmit} className="space-y-600">
               <Input
                 label="이름"
-                description="실명을 한글로 입력해 주세요."
-                placeholder="홍길동"
+                description="실명을 한글 또는 영문으로 입력해 주세요."
+                placeholder="홍길동 또는 Hong Gil Dong"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                pattern="^[가-힣]+$"
-                error={name && !/^[가-힣]+$/.test(name) ? "한글 이름만 입력 가능합니다." : undefined}
+                pattern="^[가-힣a-zA-Z\s]+$"
+                error={name && !/^[가-힣a-zA-Z\s]+$/.test(name) ? "한글 또는 영문 이름만 입력 가능합니다." : undefined}
               />
 
               <Textarea
@@ -104,7 +104,7 @@ export default function ContactPage() {
                   variant="primary"
                   size="md"
                   className="w-full"
-                  disabled={!isFormValid || isSubmitting || (name.length > 0 && !/^[가-힣]+$/.test(name))}
+                  disabled={!isFormValid || isSubmitting || (name.length > 0 && !/^[가-힣a-zA-Z\s]+$/.test(name))}
                   isLoading={isSubmitting}
                 >
                   {isSubmitting ? "제출 중..." : "문의 접수하기"}
