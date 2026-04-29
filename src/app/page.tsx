@@ -24,7 +24,7 @@ function groupSemanticColors(colors: Record<string, string>) {
   return groups;
 }
 
-export default function DesignSystemPage() {
+export default function Home() {
   const semanticGroups = groupSemanticColors(semantics.colors);
 
   return (
