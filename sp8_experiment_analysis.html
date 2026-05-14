@@ -1,0 +1,250 @@
+
+<h2 class="sr-only">SP8 실험결과 분석 대시보드 - comp, exp_A, exp_B 그룹별 KPI 비교</h2>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.section { margin-bottom: 2rem; }
+.section-title { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+.metric-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+.metric-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+.metric-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.metric-sub { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+.chart-wrap { position: relative; width: 100%; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 10px; }
+.legend span { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+.tab-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.tab-btn { font-size: 12px; padding: 5px 14px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: transparent; color: var(--color-text-secondary); cursor: pointer; }
+.tab-btn.active { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); font-weight: 500; }
+.insight-box { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 14px 16px; margin-bottom: 10px; border-left: 3px solid #378ADD; }
+.insight-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+.insight-body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+.badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: var(--border-radius-md); font-weight: 500; }
+.badge-up { background: #EAF3DE; color: #3B6D11; }
+.badge-down { background: #FCEBEB; color: #A32D2D; }
+.badge-neu { background: #F1EFE8; color: #5F5E5A; }
+</style>
+
+<div style="padding: 1rem 0;">
+
+<div class="section">
+  <div class="section-title">그룹별 평균 지표 (전체 기간)</div>
+  <div id="metric-cards" class="metric-grid"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">일별 트렌드</div>
+  <div class="tab-row" id="tab-row"></div>
+  <div class="legend">
+    <span><span class="legend-dot" style="background:#534AB7"></span>comp</span>
+    <span><span class="legend-dot" style="background:#1D9E75"></span>exp_A</span>
+    <span><span class="legend-dot" style="background:#D85A30"></span>exp_B</span>
+  </div>
+  <div class="chart-wrap" style="height:280px"><canvas id="trendChart" role="img" aria-label="일별 그룹별 트렌드 차트"></canvas></div>
+</div>
+
+<div class="section">
+  <div class="section-title">전환율 비교 (거래고객 / 환전클릭고객)</div>
+  <div class="chart-wrap" style="height:220px"><canvas id="convChart" role="img" aria-label="그룹별 전환율 막대 차트"></canvas></div>
+</div>
+
+<div class="section">
+  <div class="section-title">주요 인사이트</div>
+  <div id="insights"></div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const raw = [
+  {date:'20260430',group:'comp',click:245,trade:82,won:27,fx:58,cert:4,post:2},
+  {date:'20260430',group:'exp_A',click:235,trade:105,won:49,fx:69,cert:0,post:0},
+  {date:'20260430',group:'exp_B',click:253,trade:99,won:41,fx:67,cert:0,post:0},
+  {date:'20260501',group:'comp',click:205,trade:82,won:25,fx:64,cert:0,post:0},
+  {date:'20260501',group:'exp_A',click:195,trade:86,won:48,fx:52,cert:0,post:0},
+  {date:'20260501',group:'exp_B',click:216,trade:90,won:45,fx:55,cert:0,post:0},
+  {date:'20260502',group:'comp',click:133,trade:48,won:18,fx:35,cert:0,post:0},
+  {date:'20260502',group:'exp_A',click:146,trade:67,won:33,fx:41,cert:0,post:0},
+  {date:'20260502',group:'exp_B',click:144,trade:68,won:39,fx:40,cert:0,post:0},
+  {date:'20260505',group:'comp',click:192,trade:65,won:28,fx:48,cert:0,post:0},
+  {date:'20260505',group:'exp_A',click:193,trade:78,won:45,fx:46,cert:0,post:0},
+  {date:'20260505',group:'exp_B',click:228,trade:98,won:49,fx:66,cert:0,post:0},
+  {date:'20260506',group:'comp',click:336,trade:113,won:30,fx:94,cert:8,post:4},
+  {date:'20260506',group:'exp_A',click:344,trade:143,won:64,fx:96,cert:0,post:0},
+  {date:'20260506',group:'exp_B',click:324,trade:120,won:60,fx:74,cert:0,post:0},
+  {date:'20260507',group:'comp',click:360,trade:121,won:47,fx:87,cert:3,post:1},
+  {date:'20260507',group:'exp_A',click:381,trade:147,won:76,fx:85,cert:0,post:0},
+  {date:'20260507',group:'exp_B',click:362,trade:155,won:80,fx:88,cert:0,post:0},
+  {date:'20260508',group:'comp',click:275,trade:105,won:38,fx:77,cert:3,post:1},
+  {date:'20260508',group:'exp_A',click:318,trade:136,won:76,fx:72,cert:0,post:0},
+  {date:'20260508',group:'exp_B',click:309,trade:132,won:73,fx:74,cert:0,post:0},
+  {date:'20260509',group:'comp',click:316,trade:129,won:47,fx:91,cert:2,post:1},
+  {date:'20260509',group:'exp_A',click:300,trade:150,won:68,fx:98,cert:0,post:0},
+  {date:'20260509',group:'exp_B',click:291,trade:123,won:60,fx:70,cert:1,post:1},
+  {date:'20260512',group:'comp',click:335,trade:111,won:50,fx:71,cert:8,post:4},
+  {date:'20260512',group:'exp_A',click:339,trade:144,won:76,fx:85,cert:1,post:0},
+  {date:'20260512',group:'exp_B',click:395,trade:159,won:78,fx:99,cert:0,post:0},
+];
+
+const groups = ['comp','exp_A','exp_B'];
+const colors = {comp:'#534AB7', exp_A:'#1D9E75', exp_B:'#D85A30'};
+const dates = [...new Set(raw.map(d=>d.date))].sort();
+
+function avg(group, key) {
+  const rows = raw.filter(r=>r.group===group);
+  return rows.reduce((s,r)=>s+r[key],0)/rows.length;
+}
+
+const metrics = [
+  {key:'click', label:'평균 환전클릭고객'},
+  {key:'trade', label:'평균 거래고객'},
+  {key:'won', label:'평균 원화거래'},
+  {key:'fx', label:'평균 외화거래'},
+];
+
+const cards = document.getElementById('metric-cards');
+metrics.forEach(m => {
+  groups.forEach(g => {
+    const v = avg(g, m.key);
+    const card = document.createElement('div');
+    card.className = 'metric-card';
+    card.innerHTML = `<div class="metric-label">${m.label}</div><div class="metric-value" style="font-size:18px">${Math.round(v)}</div><div class="metric-sub">${g}</div>`;
+    cards.appendChild(card);
+  });
+});
+
+const fields = [
+  {key:'click', label:'환전클릭고객'},
+  {key:'trade', label:'거래고객'},
+  {key:'won', label:'원화거래'},
+  {key:'fx', label:'외화거래'},
+];
+
+let activeField = 'trade';
+const tabRow = document.getElementById('tab-row');
+let trendChart = null;
+
+function buildTrend() {
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  const datasets = groups.map(g => ({
+    label: g,
+    data: dates.map(d => { const r = raw.find(x=>x.date===d && x.group===g); return r ? r[activeField] : null; }),
+    borderColor: colors[g],
+    backgroundColor: colors[g]+'22',
+    tension: 0.3,
+    pointRadius: 4,
+    borderWidth: 2,
+    fill: false,
+  }));
+  if (trendChart) trendChart.destroy();
+  trendChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: dates.map(d=>`${d.slice(4,6)}/${d.slice(6,8)}`), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 11 }, color: '#888' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        y: { ticks: { font: { size: 11 }, color: '#888' }, grid: { color: 'rgba(0,0,0,0.05)' } }
+      }
+    }
+  });
+}
+
+fields.forEach(f => {
+  const btn = document.createElement('button');
+  btn.className = 'tab-btn' + (f.key===activeField ? ' active' : '');
+  btn.textContent = f.label;
+  btn.onclick = () => {
+    activeField = f.key;
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    buildTrend();
+  };
+  tabRow.appendChild(btn);
+});
+
+buildTrend();
+
+const convRates = groups.map(g => {
+  const rows = raw.filter(r=>r.group===g);
+  const totalClick = rows.reduce((s,r)=>s+r.click,0);
+  const totalTrade = rows.reduce((s,r)=>s+r.trade,0);
+  return (totalTrade/totalClick*100);
+});
+
+const wonRates = groups.map(g => {
+  const rows = raw.filter(r=>r.group===g);
+  const totalClick = rows.reduce((s,r)=>s+r.click,0);
+  const totalWon = rows.reduce((s,r)=>s+r.won,0);
+  return (totalWon/totalClick*100);
+});
+
+const ctx2 = document.getElementById('convChart').getContext('2d');
+new Chart(ctx2, {
+  type: 'bar',
+  data: {
+    labels: ['comp','exp_A','exp_B'],
+    datasets: [
+      {
+        label: '거래전환율 (거래/클릭)',
+        data: convRates.map(v=>parseFloat(v.toFixed(1))),
+        backgroundColor: groups.map(g=>colors[g]+'cc'),
+        borderRadius: 4,
+      },
+      {
+        label: '원화거래 전환율 (원화/클릭)',
+        data: wonRates.map(v=>parseFloat(v.toFixed(1))),
+        backgroundColor: groups.map(g=>colors[g]+'55'),
+        borderRadius: 4,
+        borderDash: [4,4],
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: true, labels: { font: { size: 11 }, color: '#888', boxWidth: 10, boxHeight: 10 } } },
+    scales: {
+      x: { ticks: { font:{size:12}, color:'#888' }, grid: { display: false } },
+      y: { ticks: { font:{size:11}, color:'#888', callback: v=>v+'%' }, grid: { color:'rgba(0,0,0,0.05)' } }
+    }
+  }
+});
+
+const compConv = convRates[0];
+const aConv = convRates[1];
+const bConv = convRates[2];
+const aLift = ((aConv - compConv)/compConv*100).toFixed(1);
+const bLift = ((bConv - compConv)/compConv*100).toFixed(1);
+
+const avgClickComp = avg('comp','click');
+const avgClickA = avg('exp_A','click');
+const avgClickB = avg('exp_B','click');
+
+const ins = [
+  {
+    title: `exp_A 거래전환율: ${aConv.toFixed(1)}% <span class="badge badge-up">+${aLift}% vs comp</span>`,
+    body: `exp_A 그룹은 comp 대비 거래전환율이 ${aLift}% 높습니다. 클릭 수는 유사하지만 실제 거래로 이어지는 비율이 뚜렷하게 상승했습니다.`
+  },
+  {
+    title: `exp_B 거래전환율: ${bConv.toFixed(1)}% <span class="badge badge-up">+${bLift}% vs comp</span>`,
+    body: `exp_B도 comp 대비 전환율이 개선됐습니다. exp_A보다는 낮지만 유의미한 수준의 개선을 보입니다.`
+  },
+  {
+    title: '통합증거금신청: comp 그룹에서만 발생 <span class="badge badge-down">실험군 0건</span>',
+    body: '통합증거금신청(G열) 및 신청후거래(H열)는 comp에서만 꾸준히 발생(4~8건/일)했으며 exp_A, exp_B는 거의 0건입니다. 이 기능이 실험 대상에서 제외되었거나, 실험 변경이 해당 플로우에 영향을 미쳤을 가능성이 있습니다.'
+  },
+  {
+    title: '원화거래 전환율: exp_A·B 모두 comp 대비 높음',
+    body: `원화거래 전환율(원화/클릭)도 실험군에서 높게 나타납니다. 외화거래는 그룹 간 차이가 상대적으로 작아, 실험 처치가 원화거래에 더 큰 영향을 준 것으로 보입니다.`
+  }
+];
+
+const insBox = document.getElementById('insights');
+ins.forEach(i => {
+  insBox.innerHTML += `<div class="insight-box"><div class="insight-title">${i.title}</div><div class="insight-body">${i.body}</div></div>`;
+});
+</script>
