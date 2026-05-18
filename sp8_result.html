@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Sprint 8 A/B 테스트 분석 보고서</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono&display=swap');
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', 'Malgun Gothic', '맑은 고딕', sans-serif;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 50px 60px;
+    color: #1f2937;
+    line-height: 1.7;
+    background: #fafafa;
+  }
+  .cover {
+    text-align: center;
+    padding: 40px 0 30px;
+    border-bottom: 3px solid #1F4E78;
+    margin-bottom: 40px;
+  }
+  .cover h1 {
+    font-size: 32px;
+    color: #1F4E78;
+    font-weight: 900;
+    margin: 0 0 12px;
+  }
+  .cover .subtitle {
+    font-size: 17px;
+    color: #555;
+    font-weight: 400;
+    margin-bottom: 24px;
+  }
+  .cover .meta {
+    font-size: 13px;
+    color: #777;
+  }
+  h1.section {
+    font-size: 22px;
+    color: #1F4E78;
+    font-weight: 700;
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #1F4E78;
+  }
+  h2.subsection {
+    font-size: 17px;
+    color: #1F4E78;
+    font-weight: 700;
+    margin: 28px 0 12px;
+  }
+  p { margin: 8px 0; font-size: 14.5px; }
+  ul { margin: 8px 0; padding-left: 22px; font-size: 14.5px; }
+  ul li { margin: 4px 0; }
+  strong { color: #1F4E78; }
+  .red { color: #c00000; font-weight: 700; }
+  .highlight {
+    background: #FFF2CC;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 700;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 13.5px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  th {
+    background: #1F4E78;
+    color: white;
+    padding: 10px 8px;
+    font-weight: 700;
+    text-align: center;
+    border: 1px solid #1F4E78;
+  }
+  td {
+    padding: 9px 10px;
+    border: 1px solid #d8d8d8;
+    text-align: center;
+  }
+  td.label {
+    text-align: left;
+    font-weight: 600;
+    background: #f5f7fa;
+  }
+  tr.highlight-row td {
+    background: #FFF2CC;
+    font-weight: 700;
+  }
+  tr.highlight-row td.label {
+    background: #FFE7A0;
+  }
+  .formula {
+    background: #EAF1F8;
+    border: 2px solid #1F4E78;
+    padding: 18px 22px;
+    margin: 14px 0;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 14px;
+  }
+  .formula .main {
+    font-weight: 700;
+    color: #1F4E78;
+    font-size: 15px;
+  }
+  .formula .note {
+    color: #666;
+    font-size: 12.5px;
+    margin-top: 8px;
+  }
+  .result-box {
+    background: #EAF1F8;
+    border-left: 5px solid #1F4E78;
+    padding: 14px 20px;
+    margin: 10px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .result-box .formula-line {
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: #c00000;
+  }
+  .callout {
+    background: #FFF8E7;
+    border-left: 4px solid #E69500;
+    padding: 12px 18px;
+    margin: 14px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 14px;
+  }
+  .conclusion-box {
+    background: linear-gradient(135deg, #1F4E78 0%, #2E6BA0 100%);
+    color: white;
+    padding: 22px 28px;
+    border-radius: 8px;
+    margin: 20px 0 12px;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .conclusion-box .big {
+    font-size: 17px;
+    font-weight: 700;
+    color: #FFE066;
+  }
+  @media print {
+    body { background: white; padding: 20px; }
+    .cover { page-break-after: avoid; }
+    h1.section { page-break-after: avoid; }
+    table { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>Sprint 8 A/B 테스트 분석 보고서</h1>
+  <div class="subtitle">실험군 A 의 거래고객수 및 원화거래고객수 증대 효과</div>
+  <div class="meta">
+    작성일: 2026-05-18
+  </div>
+</div>
+
+<!-- ========== 1. 실험 개요 ========== -->
+<h1 class="section">1. 실험 개요</h1>
+<p><strong>실험 기간:</strong> 2026-04-30 ~ 2026-05-14 (영업일 7일)</p>
+<p><strong>대상 그룹:</strong> 고객번호 mod 3 split — 대조군 / 실험군 A / 실험군 B</p>
+<p><strong>분석 목적:</strong> 대조군 대비 실험군 A 의 거래고객수 및 원화거래고객수 증대 효과 검증, 영업일 20일 환산 시 기대 증대 거래 고객수 추정</p>
+
+<!-- ========== 2. 누적 결과 ========== -->
+<h1 class="section">2. 누적 결과 — 실험군 A vs 대조군</h1>
+<p>실험 기간 누적 데이터 기준 비교 결과는 다음과 같다.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>지표</th><th>대조군</th><th>실험군 A</th><th>절대 차이</th><th>상대 uplift</th><th>p-value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="label">전입고객수</td><td>3,052</td><td>3,065</td><td>—</td><td>—</td><td>—</td></tr>
+    <tr><td class="label">거래고객수</td><td>1,058</td><td>1,314</td><td>+256명</td><td>—</td><td>—</td></tr>
+    <tr><td class="label">원화거래고객수</td><td>394</td><td>660</td><td>+266명</td><td>—</td><td>—</td></tr>
+    <tr class="highlight-row">
+      <td class="label">거래 전환율</td>
+      <td>34.67%</td><td>42.87%</td>
+      <td>+8.21%p</td><td>+23.7%</td>
+      <td>4.5e-11 (★★★)</td>
+    </tr>
+    <tr class="highlight-row">
+      <td class="label">원화거래 전환율</td>
+      <td>12.91%</td><td>21.53%</td>
+      <td>+8.62%p</td><td>+66.8%</td>
+      <td>&lt;1e-15 (★★★)</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>▶ 핵심 시사점:</strong> 거래 전환율과 원화거래 전환율 모두 통계적으로 매우 유의(p &lt; 0.0001)하게 증가하였으며,
+  특히 원화거래율은 상대 <span class="red">+66.8%</span> 의 큰 효과를 보였다.
+</div>
+
+<!-- ========== 3. 영업일 20일 기준 증대 거래 고객수 추정 ========== -->
+<h1 class="section">3. 영업일 20일 기준 증대 거래 고객수 추정</h1>
+
+<h2 class="subsection">3.1 적용 식</h2>
+<div class="formula">
+  <div class="main">추정 증대 거래고객수 = uplift(%p) × 일평균 전체 (환전화면)전입고객수 × 20영업일</div>
+  <div class="note">
+    ※ 일평균 전체 (환전화면)전입 = (영업일 7일간 대조군 + 실험군 A + 실험군 B 전입 누적) ÷ 7<br>
+    ※ 실험군 A 정책을 전체 트래픽(100%)에 롤아웃했을 때의 기대 증대분
+  </div>
+</div>
+
+<h2 class="subsection">3.2 변수 값</h2>
+<table>
+  <thead><tr><th style="width:60%">항목</th><th>값</th></tr></thead>
+  <tbody>
+    <tr><td class="label">영업일 7일 누적 전체 (환전화면)전입 (3그룹 합)</td><td>6,687명</td></tr>
+    <tr><td class="label">일평균 전체 (환전화면)전입</td><td><strong>6,687 ÷ 7 = 955.3명</strong></td></tr>
+    <tr><td class="label">거래율 uplift</td><td class="red">+8.55%p</td></tr>
+    <tr><td class="label">원화거래율 uplift</td><td class="red">+8.38%p</td></tr>
+  </tbody>
+</table>
+
+<h2 class="subsection">3.3 일자별 전체 전입고객수 (참고)</h2>
+<table>
+  <thead>
+    <tr>
+      <th>일자</th><th>4/30</th><th>5/6</th><th>5/7</th><th>5/8</th>
+      <th>5/12</th><th>5/13</th><th>5/14</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="label">전체 (환전화면)전입</td>
+      <td>733</td><td>1,004</td><td>1,103</td><td>902</td>
+      <td>1,073</td><td>859</td><td>1,013</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 class="subsection">3.4 계산 결과</h2>
+
+<p><strong>① 거래고객수 증대</strong></p>
+<div class="result-box">
+  <div class="formula-line">955.3 × 0.0855 × 20 = +1,633명</div>
+</div>
+
+<p><strong>② 원화거래고객수 증대</strong></p>
+<div class="result-box">
+  <div class="formula-line">955.3 × 0.0838 × 20 = +1,600명</div>
+</div>
+
+<!-- ========== 4. 결론 ========== -->
+<h1 class="section">4. 결론</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>지표</th><th>일평균 증대</th><th>20영업일 누적 증대</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="label">거래고객수</td>
+      <td>+81.7명/일</td>
+      <td><span class="highlight">+약 1,633명</span></td>
+    </tr>
+    <tr>
+      <td class="label">원화거래고객수</td>
+      <td>+80.0명/일</td>
+      <td><span class="highlight">+약 1,600명</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="conclusion-box">
+  실험군 A 정책을 전체 트래픽에 100% 롤아웃 시,<br>
+  <span class="big">20영업일 기준 거래고객 약 +1,633명, 원화거래고객 약 +1,600명 증대</span> 가 기대된다.
+</div>
+
+<ul>
+  <li>거래 전환율과 원화거래 전환율 모두 통계적으로 유의한 개선 확인 (p &lt; 0.0001)</li>
+  <li>특히 원화거래율은 상대 uplift <strong>+66.8%</strong>로 핵심 KPI 개선 효과 매우 큼</li>
+  <li>100% 롤아웃 시 영업일 20일 기준으로 거래·원화거래 고객 모두 <strong>1,600명 이상 증대</strong> 기대</li>
+</ul>
+
+<!-- ========== 별첨: 월 거래고객수 순증 추정 ========== -->
+<h1 class="section">별첨. 월 거래고객수 순증(Net) 추정</h1>
+
+<p>
+  4-3 결과의 <strong>+1,600명(원화거래고객수 누적 증대)</strong> 은 일별 거래고객수를 단순 합산한 값으로,
+  (a) 동일 고객의 다일 중복 카운트와 (b) 실험 운영 시간(02~09시) 외 시간대에도 거래 가능한 고객의
+  잠식(cannibalization) 효과를 보정하지 않은 수치이다. 본 별첨에서는 이 두 요인을 반영하여
+  <strong>월(20영업일) 기준 순수 증대 고객수</strong>를 추정한다.
+</p>
+
+<h2 class="subsection">[별첨-1] 보정 인자</h2>
+<table>
+  <thead>
+    <tr><th style="width:14%">구분</th><th style="width:18%">보정값</th><th>근거 / 의미</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="label">중복 보정</td>
+      <td><strong>× 0.9</strong><br>(중복률 10%)</td>
+      <td style="text-align:left">
+        실험군 A·B 의 실험 기간 거래 고객 중 다일 중복 카운트 비율이 약 10% (유니크 90%)로 관측됨.
+        일별 합산 누적값에서 중복분을 제거하기 위해 0.9를 곱한다.
+      </td>
+    </tr>
+    <tr>
+      <td class="label">시간대 보정</td>
+      <td><strong>× 0.13</strong><br>(13%)</td>
+      <td style="text-align:left">
+        2026-03-31 ~ 2026-04-27 사전 데이터 기준, <strong>02~09시 외 시간대에는 거래하지 않는</strong>
+        고객 비율이 약 13%. 이 고객들만 실험 노출 시간대에 종속적이므로 실험 효과가 <strong>순수
+        incremental</strong>로 간주됨. 나머지 87% 고객은 다른 시간대에도 거래가 가능하여 실험이
+        없었어도 거래했을 가능성이 있어 잠식분으로 제외한다.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 class="subsection">[별첨-2] 적용 식</h2>
+<div class="formula">
+  <div class="main">월 순증 원화거래고객수 = (20영업일 누적 증대) × (1 − 중복률) × (실험 시간대 전용 고객 비율)</div>
+  <div class="note">
+    = 1,600 × 0.90 × 0.13
+  </div>
+</div>
+
+<h2 class="subsection">[별첨-3] 계산 결과</h2>
+<div class="result-box">
+  <div class="formula-line">1,600 × 0.9 × 0.13 ≈ +187명 / 월(20영업일)</div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>단계</th><th>계산</th><th>누적값</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="label">① 20영업일 누적 증대 (원화거래)</td>
+      <td>955.3 × 8.38%p × 20</td>
+      <td><strong>+1,600명</strong></td>
+    </tr>
+    <tr>
+      <td class="label">② 중복 보정 (× 0.9)</td>
+      <td>1,600 × 0.9</td>
+      <td>+1,440명</td>
+    </tr>
+    <tr class="highlight-row">
+      <td class="label">③ 시간대 보정 (× 0.13)</td>
+      <td>1,440 × 0.13</td>
+      <td><span class="red">≈ +187명</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 class="subsection">[별첨-4] 로직 검토 및 한계</h2>
+<ul>
+  <li>
+    <strong>중복 보정의 타당성:</strong> 중복률 10%는 <strong>영업일 7일 기준</strong> 실험군 A·B
+    실측치로 산출된 값이므로, 분석 기간을 20영업일로 확장할 경우 중복률은 다소 상승할 가능성이 있음.
+    이 경우 90% 유니크 가정은 다소 낙관적일 수 있으며, 실제 순증 효과는 더 작아질 수 있음.
+  </li>
+  <li>
+    <strong>시간대 보정의 타당성:</strong> 13%는 "02~09시 전용 거래 고객" 비율로,
+    실험이 다른 시간대에 노출되지 않는 한계를 반영한 <strong>보수적(lower bound) 추정</strong>.
+  </li>
+  <li>
+    <strong>가정에 포함하지 못한 디테일:</strong> 실험 시간대(02~09시)에 거래한 고객 중에서도
+    <strong>환전 버튼을 거치지 않고 바로 주문 거래를 수행한 케이스</strong>가 존재할 수 있음.
+    이 경우 해당 거래는 실험 노출과 무관하게 발생한 거래이므로, 정밀한 incremental 산정 시
+    실험 노출(환전화면 진입) 여부를 기준으로 추가 필터링이 필요. 본 추정에는 이 디테일까지는
+    반영하지 못했음.
+  </li>
+  <li>
+    <strong>해석:</strong> +187명/월은 가장 보수적인 추정치이며, 실제 incremental은
+    <strong>187명 + α</strong> 수준으로 보는 것이 적절.
+  </li>
+</ul>
+
+<div class="conclusion-box">
+  보수적 추정 기준,
+  <span class="big">실험군 A 정책 100% 롤아웃 시 월 순증 원화거래고객수 ≈ +187명 + α</span>
+</div>
+
+<!-- ========== 별첨 2: Raw Data ========== -->
+<h1 class="section">별첨 2. Raw Data (sprint8_518)</h1>
+<p>본 보고서의 모든 분석은 아래 일자별·세그별 원시 데이터를 기반으로 산출됨.</p>
+
+<table style="font-size:12.5px">
+  <thead>
+    <tr>
+      <th>기준일자</th>
+      <th>고객세그</th>
+      <th>전입<br>고객수</th>
+      <th>거래<br>고객수</th>
+      <th>원화거래<br>고객수</th>
+      <th>외화거래<br>고객수</th>
+      <th>통합증거금<br>신청고객</th>
+      <th>통합증거금<br>신청후거래고객수</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>2026-04-30</td><td>대조군</td><td>245</td><td>82</td><td>27</td><td>58</td><td>4</td><td>2</td></tr>
+    <tr><td>2026-04-30</td><td>실험군 A</td><td>235</td><td>105</td><td>49</td><td>69</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-04-30</td><td>실험군 B</td><td>253</td><td>99</td><td>41</td><td>67</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-01</td><td>대조군</td><td>205</td><td>82</td><td>25</td><td>64</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-01</td><td>실험군 A</td><td>195</td><td>86</td><td>48</td><td>52</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-01</td><td>실험군 B</td><td>216</td><td>90</td><td>45</td><td>55</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-02</td><td>대조군</td><td>133</td><td>48</td><td>18</td><td>35</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-02</td><td>실험군 A</td><td>146</td><td>67</td><td>33</td><td>41</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-02</td><td>실험군 B</td><td>144</td><td>68</td><td>39</td><td>40</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-05</td><td>대조군</td><td>192</td><td>65</td><td>28</td><td>48</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-05</td><td>실험군 A</td><td>193</td><td>78</td><td>45</td><td>46</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-05</td><td>실험군 B</td><td>228</td><td>98</td><td>49</td><td>66</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-06</td><td>대조군</td><td>336</td><td>113</td><td>30</td><td>94</td><td>8</td><td>4</td></tr>
+    <tr><td>2026-05-06</td><td>실험군 A</td><td>344</td><td>143</td><td>64</td><td>96</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-06</td><td>실험군 B</td><td>324</td><td>120</td><td>60</td><td>74</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-07</td><td>대조군</td><td>360</td><td>121</td><td>47</td><td>87</td><td>3</td><td>1</td></tr>
+    <tr><td>2026-05-07</td><td>실험군 A</td><td>381</td><td>147</td><td>76</td><td>85</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-07</td><td>실험군 B</td><td>362</td><td>155</td><td>76</td><td>88</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-08</td><td>대조군</td><td>275</td><td>105</td><td>38</td><td>79</td><td>3</td><td>1</td></tr>
+    <tr><td>2026-05-08</td><td>실험군 A</td><td>318</td><td>136</td><td>76</td><td>72</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-08</td><td>실험군 B</td><td>309</td><td>132</td><td>73</td><td>74</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-09</td><td>대조군</td><td>316</td><td>129</td><td>47</td><td>91</td><td>2</td><td>1</td></tr>
+    <tr><td>2026-05-09</td><td>실험군 A</td><td>300</td><td>150</td><td>68</td><td>98</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-09</td><td>실험군 B</td><td>291</td><td>123</td><td>60</td><td>70</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-12</td><td>대조군</td><td>335</td><td>111</td><td>50</td><td>71</td><td>8</td><td>4</td></tr>
+    <tr><td>2026-05-12</td><td>실험군 A</td><td>340</td><td>145</td><td>76</td><td>86</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-12</td><td>실험군 B</td><td>398</td><td>161</td><td>78</td><td>101</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-13</td><td>대조군</td><td>297</td><td>89</td><td>37</td><td>60</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-13</td><td>실험군 A</td><td>279</td><td>132</td><td>59</td><td>84</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-13</td><td>실험군 B</td><td>283</td><td>124</td><td>65</td><td>72</td><td>2</td><td>0</td></tr>
+    <tr><td>2026-05-14</td><td>대조군</td><td>358</td><td>113</td><td>47</td><td>81</td><td>5</td><td>0</td></tr>
+    <tr><td>2026-05-14</td><td>실험군 A</td><td>334</td><td>125</td><td>66</td><td>75</td><td>0</td><td>0</td></tr>
+    <tr><td>2026-05-14</td><td>실험군 B</td><td>321</td><td>124</td><td>58</td><td>82</td><td>0</td><td>0</td></tr>
+  </tbody>
+</table>
+
+</body>
+</html>
